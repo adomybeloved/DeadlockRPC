@@ -63,3 +63,7 @@ The game's runtime and memory are never touched. So it's VAC-safe and won't affe
 - Clean up code
 - Cross-platform stuff
 
+## Known Bugs
+
+Please share any issues!
+
