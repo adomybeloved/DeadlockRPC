@@ -31,48 +31,35 @@ class HeroInfo(TypedDict):
 # ── embedded fallback (keeps the app working when offline) ─────────────────────
 # Only the playable + common heroes are listed here;
 # the full list is fetched from the API at runtime.
+# some heroes have missing hideout flavour text, so those heroes were manually added here
 
 _FALLBACK: dict[str, HeroInfo] = {
     "inferno":    {"name": "Infernus",   "hideout_text": "In the Hideout", "asset_key": "hero_inferno"},
     "gigawatt":   {"name": "Seven",      "hideout_text": "In the Hideout", "asset_key": "hero_gigawatt"},
     "hornet":     {"name": "Vindicta",   "hideout_text": "In the Hideout", "asset_key": "hero_hornet"},
-    "ghost":      {"name": "Lady Geist", "hideout_text": "In the Hideout", "asset_key": "hero_ghost"},
-    "atlas":      {"name": "Abrams",     "hideout_text": "In the Hideout", "asset_key": "hero_atlas"},
+    "geist":      {"name": "Lady Geist", "hideout_text": "Being Fabulous in the Hideout", "asset_key": "hero_geist"},
+    "abrams":     {"name": "Abrams",     "hideout_text": "Investigating the Hideout", "asset_key": "hero_atlas"},
     "wraith":     {"name": "Wraith",     "hideout_text": "In the Hideout", "asset_key": "hero_wraith"},
-    "forge":      {"name": "McGinnis",   "hideout_text": "In the Hideout", "asset_key": "hero_forge"},
+    "mcginnis":   {"name": "McGinnis",   "hideout_text": "Tinkering in the Hideout", "asset_key": "hero_forge"},
     "dynamo":     {"name": "Dynamo",     "hideout_text": "In the Hideout", "asset_key": "hero_dynamo"},
     "haze":       {"name": "Haze",       "hideout_text": "In the Hideout", "asset_key": "hero_haze"},
     "kelvin":     {"name": "Kelvin",     "hideout_text": "In the Hideout", "asset_key": "hero_kelvin"},
     "lash":       {"name": "Lash",       "hideout_text": "In the Hideout", "asset_key": "hero_lash"},
-    "pocket":     {"name": "Pocket",     "hideout_text": "In the Hideout", "asset_key": "hero_pocket"},
     "bebop":      {"name": "Bebop",      "hideout_text": "In the Hideout", "asset_key": "hero_bebop"},
     "shiv":       {"name": "Shiv",       "hideout_text": "In the Hideout", "asset_key": "hero_shiv"},
     "viscous":    {"name": "Viscous",    "hideout_text": "In the Hideout", "asset_key": "hero_viscous"},
     "warden":     {"name": "Warden",     "hideout_text": "In the Hideout", "asset_key": "hero_warden"},
     "yamato":     {"name": "Yamato",     "hideout_text": "In the Hideout", "asset_key": "hero_yamato"},
-    "tengu":      {"name": "Ivy",        "hideout_text": "In the Hideout", "asset_key": "hero_tengu"},
     "orion":      {"name": "Grey Talon", "hideout_text": "In the Hideout", "asset_key": "hero_orion"},
-    "krill":      {"name": "Mo & Krill", "hideout_text": "In the Hideout", "asset_key": "hero_krill"},
-    "synth":      {"name": "Pocket",     "hideout_text": "In the Hideout", "asset_key": "hero_synth"},
+    "digger":     {"name": "Mo & Krill", "hideout_text": "Relaxing in the Hideout", "asset_key": "hero_krill"},
+    "pocket":     {"name": "Pocket",     "hideout_text": "Sulking in the Hideout", "asset_key": "hero_synth"},
     "chrono":     {"name": "Paradox",    "hideout_text": "In the Hideout", "asset_key": "hero_chrono"},
     "astro":      {"name": "Holliday",   "hideout_text": "In the Hideout", "asset_key": "hero_astro"},
     "cadence":    {"name": "Calico",     "hideout_text": "In the Hideout", "asset_key": "hero_cadence"},
     "werewolf":   {"name": "Silver",     "hideout_text": "In the Hideout", "asset_key": "hero_werewolf"},
     "magician":   {"name": "Sinclair",   "hideout_text": "In the Hideout", "asset_key": "hero_magician"},
-    "archer":     {"name": "Grey Talon", "hideout_text": "In the Hideout", "asset_key": "hero_orion"},
-    "abrams":     {"name": "Abrams",     "hideout_text": "In the Hideout", "asset_key": "hero_atlas"},
-    "digger":     {"name": "Mo & Krill", "hideout_text": "In the Hideout", "asset_key": "hero_krill"},
-    "ivy":        {"name": "Ivy",        "hideout_text": "In the Hideout", "asset_key": "hero_tengu"},
-}
-
-# ── asset key overrides (old internal name -> correct Discord asset) ───────────
-# These handle heroes whose internal codename differs from the Discord asset name.
-_ASSET_OVERRIDES: dict[str, str] = {
-    "abrams":  "hero_atlas",
-    "archer":  "hero_orion",
-    "digger":  "hero_krill",
-    "ivy":     "hero_tengu",
-    "pocket":  "hero_synth",
+    "archer":     {"name": "Grey Talon", "hideout_text": "Mourning in the Hideout", "asset_key": "hero_orion"},
+    "ivy":        {"name": "Ivy",        "hideout_text": "Wishing the Arroyos were in the Hideout", "asset_key": "hero_tengu"},
 }
 
 _CACHE_TTL_SECONDS = 24 * 60 * 60  # 24 hours
@@ -121,9 +108,6 @@ class HeroDataStore:
 
     def asset_key(self, codename: str) -> str:
         """Return Discord named-asset key for the hero, e.g. "hero_inferno"."""
-        # Check explicit overrides first
-        if codename in _ASSET_OVERRIDES:
-            return _ASSET_OVERRIDES[codename]
         info = self.get(codename)
         if info:
             return info["asset_key"]
@@ -176,9 +160,7 @@ class HeroDataStore:
             # class_name looks like "hero_inferno" → strip "hero_" prefix
             codename = class_name.removeprefix("hero_")
 
-            # Determine Discord asset key:
-            # Use override if exists, otherwise use the full class_name from the API.
-            asset_key = _ASSET_OVERRIDES.get(codename, class_name)
+            asset_key = class_name
 
             parsed[codename] = HeroInfo(
                 name=name,

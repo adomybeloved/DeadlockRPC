@@ -127,9 +127,6 @@ class DiscordRPC:
                     p["state"] = f"Playing as {hero}"
                 else:
                     p["details"] = f" {mode_str}"
-                if state.hero_key:
-                    p["small_image"] = logo
-                    p["small_text"] = logo_text
 
             case GamePhase.IN_MATCH:
                 mode_str = state.mode_display()
