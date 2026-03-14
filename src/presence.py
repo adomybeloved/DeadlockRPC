@@ -104,10 +104,14 @@ class DiscordRPC:
                 # e.g. "Mixing Drinks in the Hideout" for Infernus
                 p["details"] = state.hero_hideout_text
                 p["state"] = "Playing Solo (1 of 6)"
+                p.pop("small_image", None)
+                p.pop("small_text", None)
 
             case GamePhase.PARTY_HIDEOUT:
                 p["details"] = state.hero_hideout_text
                 p["state"] = f"Party of {state.party_size}"
+                p.pop("small_image", None)
+                p.pop("small_text", None)
 
             case GamePhase.IN_QUEUE:
                 p["details"] = "Looking for Match..."

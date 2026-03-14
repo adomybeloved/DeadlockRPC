@@ -20,6 +20,8 @@
     "log_patterns": {
         "change_game_state":    "ChangeGameState:\\s+(\\w+)\\s+\\((\\d+)\\)",
         "hideout_lobby_state":  "\\[Hideout\\] Hideout Lobby Connection State:\\s+(\\w+)\\s+\\((-?\\d+)\\)",
+        "party_event":          "CMsgGCToClientPartyEvent:\\s+\\{\\s*party_id:\\s+(\\d+)\\s+event:\\s+(k_e\\w+)\\s+initiator_account_id:\\s+(\\d+)\\s*\\}",
+        "local_account_id":     "\\[U:1:(\\d+)\\]",
         "server_connect":       "\\[Client\\] CL:\\s+Connected to '([^']+)'",
         "server_disconnect":    "\\[Client\\] Disconnecting from server:\\s+(\\S+)",
         "server_shutdown":      "\\[Server\\] SV:\\s+Server shutting down:\\s+(\\S+)",

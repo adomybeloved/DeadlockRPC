@@ -53,19 +53,23 @@ class LogWatcher:
             try:
                 self.patterns[name] = re.compile(pattern_str, re.IGNORECASE)
             except re.error as e:
-                logger.warning("Invalid regex for '%s': %s — skipping", name, e)
+                logger.warning("Invalid regex for '%s': %s - skipping", name, e)
 
         self._file_handle = None
         self._last_size = 0
         self._bot_init_count = 0
         self._hideout_loaded = False
         self._game_was_running = False
+        self._hero_window_open = True
+        self._local_account_id: int | None = None
+        self._party_id: int | None = None
+        self._party_members: set[int] = set()
 
     def is_game_running(self) -> bool:
         """Check if Deadlock is running via tasklist (Windows) or pgrep (Linux/Mac)."""
         if os.name != "nt":
             # On Linux, Deadlock runs through Proton, so the Windows .exe name still
-            # appears in the process command line — pgrep -f catches it.
+            # appears in the process command line - pgrep -f catches it.
             for proc_name in self.process_names:
                 try:
                     result = subprocess.run(
@@ -171,12 +175,13 @@ class LogWatcher:
                 self._game_was_running = True
                 self.state.session_start_time = time.time()
                 self.state.enter_main_menu()
+                self._open_hero_window()
                 self._notify()
 
                 self.resync()
                 if not self._open_log():
                     logger.warning(
-                        "console.log not found at %s — is Deadlock running with -condebug? "
+                        "console.log not found at %s - is Deadlock running with -condebug? "
                         "Add -condebug to Steam launch options or restart Deadlock via this app.",
                         self.log_path,
                     )
@@ -184,6 +189,8 @@ class LogWatcher:
             elif not game_running and self._game_was_running:
                 logger.info("Deadlock closed.")
                 self._game_was_running = False
+                self._clear_party_tracking()
+                self._open_hero_window()
                 self.state.reset()
                 self._notify()
                 if self._file_handle:
@@ -232,7 +239,12 @@ class LogWatcher:
 
         # Hideout maps
         if map_name in self.hideout_maps:
-            self.state.phase = GamePhase.PARTY_HIDEOUT if self.state.in_party else GamePhase.HIDEOUT
+            # The hideout runs local helper bots and fake game-state transitions.
+            # Treat it as a clean return to hideout so that stale match data does
+            # not leak into the next real match.
+            self.state.enter_hideout()
+            self.state.map_name = map_name
+            self._open_hero_window()
             self._hideout_loaded = False
             self._bot_init_count = 0
             return
@@ -240,16 +252,115 @@ class LogWatcher:
         # Any map in map_to_mode counts as a match map
         if map_name in self.map_to_mode:
             self.state.phase = GamePhase.IN_MATCH
+            self._prepare_match_hero_tracking()
             self._hideout_loaded = False
+
+    def _clear_party_tracking(self) -> None:
+        self._party_id = None
+        self._party_members.clear()
+        self.state.set_party_size(1)
+
+    def _open_hero_window(self) -> None:
+        self._hero_window_open = True
+
+    def _close_hero_window(self) -> None:
+        self._hero_window_open = False
+
+    def _prepare_match_hero_tracking(self) -> None:
+        # clear the hideout hero and reopen the hero window so the first
+        # in-match hero signal is accepted.  The hideout hero is not
+        # necessarily the match hero bc hero selection can change it in
+        # standard 6v6, and Street Brawl assigns randomly.
+        self.state.hero_key = None
+        self.state.is_transformed = False
+        self._hero_window_open = True
+
+    def _apply_hero_signal(self, hero_key: str) -> None:
+        hero_norm = hero_key.lower().replace("hero_", "")
+
+        if self.state.phase == GamePhase.SPECTATING:
+            return
+
+        if self.state.phase in (GamePhase.MATCH_INTRO, GamePhase.IN_MATCH):
+            # Sandbox allows free hero swapping like the hideout, so skip
+            # the lock-in checks and never close the hero window.
+            if self.state.match_mode != MatchMode.SANDBOX:
+                if self.state.hero_key is not None and hero_norm != self.state.hero_key:
+                    return
+                if self.state.hero_key is None and not self._hero_window_open:
+                    return
+        elif self.state.phase in (GamePhase.MAIN_MENU, GamePhase.POST_MATCH):
+            return
+
+        self.state.set_hero(hero_norm)
+        if self.state.phase in (GamePhase.MATCH_INTRO, GamePhase.IN_MATCH):
+            if self.state.match_mode != MatchMode.SANDBOX:
+                self._close_hero_window()
+
+    def _set_party_size_from_members(self, minimum_size: int = 1) -> None:
+        members = set(self._party_members)
+        if self._local_account_id is not None:
+            members.add(self._local_account_id)
+        self.state.set_party_size(max(minimum_size, len(members)))
+
+    def _apply_party_event(self, party_id: int, event_name: str, account_id: int) -> None:
+        event_key = event_name.lower()
+
+        if "joinedparty" in event_key:
+            if account_id == self._local_account_id:
+                self._party_id = party_id
+                self._party_members = {account_id}
+            elif self._party_id != party_id:
+                self._party_id = party_id
+                self._party_members = set()
+                if self._local_account_id is not None:
+                    self._party_members.add(self._local_account_id)
+
+            self._party_members.add(account_id)
+            self._set_party_size_from_members(minimum_size=2)
+            return
+
+        if self._party_id != party_id:
+            return
+
+        if any(token in event_key for token in ("leftparty", "removedfromparty", "kickedfromparty")):
+            if account_id == self._local_account_id:
+                self._clear_party_tracking()
+            else:
+                self._party_members.discard(account_id)
+                self._set_party_size_from_members()
+        elif "disband" in event_key:
+            self._clear_party_tracking()
 
     def _process_line(self, line: str) -> bool:
         old_phase = self.state.phase
         old_hero = self.state.hero_key
         old_mode = self.state.match_mode
         old_transformed = self.state.is_transformed
+        old_party_size = self.state.party_size
+        current_map = (self.state.map_name or "").lower()
+        in_hideout_map = current_map in self.hideout_maps
+
+        # capture local account ID from any line containing a Steam ID.
+        # this is a standalone check (not part of the elif chain) because
+        # [U:1:XXXXX] appears in many log lines that also carry other
+        # patterns (server_connect, player_info, etc.)
+        if self._local_account_id is None:
+            if m := self._match("local_account_id", line):
+                self._local_account_id = int(m.group(1))
+                if self._party_id is not None:
+                    self._party_members.add(self._local_account_id)
+                    self._set_party_size_from_members(minimum_size=2)
 
         # Map signals
-        if m := self._match("map_info", line):
+        if m := self._match("party_event", line):
+            self._apply_party_event(
+                party_id=int(m.group(1)),
+                event_name=m.group(2),
+                account_id=int(m.group(3)),
+            )
+
+        elif m := self._match("map_info", line):
             self._apply_map(m.group(1))
 
         elif m := self._match("map_created_physics", line):
@@ -269,6 +380,14 @@ class LogWatcher:
         elif self._match("lobby_created", line):
             self.state.match_start_time = time.time()
             self.state.queue_start_time = None
+            self._prepare_match_hero_tracking()
+            if self.state.phase in (
+                GamePhase.MAIN_MENU,
+                GamePhase.HIDEOUT,
+                GamePhase.PARTY_HIDEOUT,
+                GamePhase.IN_QUEUE,
+            ):
+                self.state.enter_match_intro()
 
         # Lobby destroyed = match is over
         elif self._match("lobby_destroyed", line):
@@ -283,27 +402,36 @@ class LogWatcher:
         elif m := self._match("server_connect", line):
             addr = m.group(1)
             self.state.connect_to_server(addr)
+            is_real_server = "loopback" not in addr.lower()
+            was_in_queue = self.state.phase == GamePhase.IN_QUEUE
 
-            if self.state.phase == GamePhase.IN_QUEUE and "loopback" not in addr.lower():
+            if is_real_server:
+                self._prepare_match_hero_tracking()
+
+            if is_real_server and self.state.phase in (
+                GamePhase.MAIN_MENU,
+                GamePhase.HIDEOUT,
+                GamePhase.PARTY_HIDEOUT,
+                GamePhase.IN_QUEUE,
+            ):
+                self.state.enter_match_intro()
+
+            if was_in_queue and is_real_server:
                 self.state.queue_start_time = None
 
         # Hero loading = local server (skip during spectating / initial hideout load)
         elif m := self._match("loaded_hero", line):
-            if self.state.phase != GamePhase.SPECTATING:
-                hero_norm = m.group(1).lower().replace("hero_", "")
-                is_hideout = self.state.phase in (GamePhase.HIDEOUT, GamePhase.PARTY_HIDEOUT)
-                if not (is_hideout and not self._hideout_loaded):
-                    self.state.set_hero(hero_norm)
+            is_hideout = self.state.phase in (GamePhase.HIDEOUT, GamePhase.PARTY_HIDEOUT)
+            if not (is_hideout and not self._hideout_loaded):
+                self._apply_hero_signal(m.group(1))
 
         # Hero loading via VMDL (remote matches only, not hideout)
-        # In hideout, VMDL fires for OTHER players' heroes, not ours
         # Also handles Silver's wolf form swap
         elif m := self._match("client_hero_vmdl", line):
-            if self.state.phase != GamePhase.SPECTATING:
-                hero_norm = m.group(1).lower()
-                self.state.set_hero(hero_norm)
-                if hero_norm == "werewolf":
-                    self.state.is_transformed = "werewolf_transform" in line.lower()
+            hero_norm = m.group(1).lower()
+            self._apply_hero_signal(hero_norm)
+            if self.state.hero_key == "werewolf" and hero_norm == "werewolf":
+                self.state.is_transformed = "werewolf_transform" in line.lower()
 
         # Silver wolf form from nonVMDL sources
         elif self._match("silver_wolf_form_on", line):
@@ -316,7 +444,10 @@ class LogWatcher:
         elif m := self._match("server_disconnect", line):
             reason = m.group(1)
             if "EXITING" in reason.upper():
+                self._open_hero_window()
                 self.state.reset()
+            elif "LOOPDEACTIVATE" in reason.upper():
+                pass
             elif self.state.phase in (GamePhase.IN_MATCH, GamePhase.MATCH_INTRO, GamePhase.SPECTATING):
                 self.state.end_match()
 
@@ -325,7 +456,7 @@ class LogWatcher:
                 self.state.end_match()
 
         elif m := self._match("change_game_state", line):
-            if self.state.phase != GamePhase.SPECTATING:
+            if self.state.phase != GamePhase.SPECTATING and not in_hideout_map:
                 state_name = m.group(1).lower()
                 state_id = int(m.group(2))
                 self.state.game_state_id = state_id
@@ -342,21 +473,24 @@ class LogWatcher:
         elif m := self._match("hideout_lobby_state", line):
             lobby_id = int(m.group(2))
             if lobby_id == 0:
-                self.state.party_size = 1
+                self._clear_party_tracking()
             elif lobby_id > 0:
-                self.state.set_party_size(max(2, self.state.party_size))
+                self._set_party_size_from_members(minimum_size=2)
 
             # Keep hideout phase label in sync with party status
             if self.state.phase in (GamePhase.HIDEOUT, GamePhase.PARTY_HIDEOUT):
                 self.state.phase = GamePhase.PARTY_HIDEOUT if self.state.in_party else GamePhase.HIDEOUT
 
-        # Bot mode
+        # Bot mode — only classify as BOT_MATCH if we haven't already
+        # identified the mode from player count (standard/street brawl
+        # matches also have bots for lane creeps, jungle camps, etc.)
         elif m := self._match("bot_init", line):
-            if self.state.phase != GamePhase.SPECTATING:
+            if self.state.phase != GamePhase.SPECTATING and not in_hideout_map:
                 difficulty = m.group(1).replace("k_ECitadelBotDifficulty_", "")
                 self._bot_init_count += 1
                 self.state.bot_difficulty = difficulty
-                self.state.match_mode = MatchMode.BOT_MATCH
+                if self.state.match_mode == MatchMode.UNKNOWN:
+                    self.state.match_mode = MatchMode.BOT_MATCH
 
         # Host activate (map fully loaded)
         elif m := self._match("host_activate", line):
@@ -368,10 +502,14 @@ class LogWatcher:
         elif m := self._match("server_shutdown", line):
             reason = m.group(1)
             if "EXITING" in reason.upper():
+                self._clear_party_tracking()
+                self._open_hero_window()
                 self.state.reset()
 
         # App shutdown
         elif self._match("app_shutdown", line) or self._match("source2_shutdown", line):
+            self._clear_party_tracking()
+            self._open_hero_window()
             self.state.reset()
 
         # Player info also get match mode from player count
@@ -383,7 +521,7 @@ class LogWatcher:
                 self.state.bot_count = int(m.group(2))
 
                 count = self.state.player_count
-                if self.state.match_mode == MatchMode.UNKNOWN:
+                if self.state.match_mode in (MatchMode.UNKNOWN, MatchMode.BOT_MATCH):
                     if count >= 9: # >= 9 instead of strictly 12 to account for players who haven't yet connected
                         self.state.match_mode = MatchMode.UNRANKED
                     elif count >= 5: # same reason
@@ -400,6 +538,7 @@ class LogWatcher:
             or self.state.hero_key != old_hero
             or self.state.match_mode != old_mode
             or self.state.is_transformed != old_transformed
+            or self.state.party_size != old_party_size
         )
 
     def _match(self, pattern_name: str, line: str) -> re.Match | None:
