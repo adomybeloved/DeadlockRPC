@@ -9,6 +9,7 @@ import platform
 import subprocess
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 import requests
@@ -16,7 +17,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 GITHUB_REPO = "Jelloge/Deadlock-Rich-Presence"
-CURRENT_VERSION = "1.4"
+CURRENT_VERSION = "1.5"
 
 # Whether we're running as a PyInstaller binary
 _FROZEN = getattr(sys, "_MEIPASS", None) is not None
@@ -129,8 +130,22 @@ def _download_asset(asset: dict, dest_dir: Path, suffix: str = "") -> Path:
     return Path(tmp_path)
 
 
+def _extract_exe_from_zip(zip_path: Path, dest_dir: Path) -> Path:
+    """Extract the .exe from a release zip and return its path."""
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        exe_names = [n for n in zf.namelist() if n.lower().endswith(".exe")]
+        if not exe_names:
+            raise FileNotFoundError("No .exe found inside the zip")
+        exe_name = exe_names[0]
+        # Extract to a flat temp file (zip may have subfolders like DeadlockRPC/DeadlockRPC.exe)
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix=".exe", dir=dest_dir)
+        with zf.open(exe_name) as src, os.fdopen(tmp_fd, "wb") as dst:
+            dst.write(src.read())
+        return Path(tmp_path)
+
+
 def _update_binary_windows(release: dict) -> bool:
-    """Download new .exe and create a batch script to swap + restart."""
+    """Download new release asset and create a batch script to swap + restart."""
     asset = _find_binary_asset(release)
     if not asset:
         logger.warning("No Windows binary found in release assets.")
@@ -140,7 +155,16 @@ def _update_binary_windows(release: dict) -> bool:
     tmp_path = None
 
     try:
-        tmp_path = _download_asset(asset, current_exe.parent, suffix=".exe")
+        is_zip = asset["name"].lower().endswith(".zip")
+        dl_suffix = ".zip" if is_zip else ".exe"
+        tmp_path = _download_asset(asset, current_exe.parent, suffix=dl_suffix)
+
+        if is_zip:
+            # Extract the exe from the zip, then clean up the zip
+            extracted = _extract_exe_from_zip(tmp_path, current_exe.parent)
+            os.unlink(tmp_path)
+            tmp_path = extracted
+
         logger.info("Download complete. Restarting...")
 
         # Batch script waits for us to exit, replaces the exe, relaunches
@@ -170,6 +194,27 @@ def _update_binary_windows(release: dict) -> bool:
         return False
 
 
+def _extract_binary_from_zip(zip_path: Path, dest_dir: Path) -> Path:
+    """Extract the binary from a release zip (Linux). Returns extracted path."""
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        # Look for the DeadlockRPC binary (no extension)
+        candidates = [n for n in zf.namelist()
+                      if "deadlockrpc" in n.lower() and not n.lower().endswith((".zip", ".json", ".ico"))
+                      and not n.endswith("/")]
+        if not candidates:
+            # Fallback: first file that isn't a config/icon/directory
+            candidates = [n for n in zf.namelist()
+                          if not n.lower().endswith((".json", ".ico", ".zip")) and not n.endswith("/")]
+        if not candidates:
+            raise FileNotFoundError("No binary found inside the zip")
+        name = candidates[0]
+        # Extract to a flat temp file (zip may have subfolders like DeadlockRPC/DeadlockRPC)
+        tmp_fd, tmp_path = tempfile.mkstemp(dir=dest_dir)
+        with zf.open(name) as src, os.fdopen(tmp_fd, "wb") as dst:
+            dst.write(src.read())
+        return Path(tmp_path)
+
+
 def _update_binary_linux(release: dict) -> bool:
     """Download new binary and replace the current one."""
     asset = _find_binary_asset(release)
@@ -181,7 +226,15 @@ def _update_binary_linux(release: dict) -> bool:
     tmp_path = None
 
     try:
-        tmp_path = _download_asset(asset, current_exe.parent)
+        is_zip = asset["name"].lower().endswith(".zip")
+        dl_suffix = ".zip" if is_zip else ""
+        tmp_path = _download_asset(asset, current_exe.parent, suffix=dl_suffix)
+
+        if is_zip:
+            extracted = _extract_binary_from_zip(tmp_path, current_exe.parent)
+            os.unlink(tmp_path)
+            tmp_path = extracted
+
         os.chmod(tmp_path, 0o755)
 
         logger.info("Download complete. Restarting...")
