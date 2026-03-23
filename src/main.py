@@ -16,6 +16,7 @@ from condebug import launch as launch_deadlock
 from presence import DiscordRPC
 from systray import create_tray_icon
 from hero_data import HeroDataStore
+from updater import check_and_prompt as check_for_updates
 
 _FROZEN = getattr(sys, "_MEIPASS", None)
 BUNDLE_DIR = Path(_FROZEN) if _FROZEN else Path(__file__).parent
@@ -104,8 +105,7 @@ def find_deadlock_path(config: dict) -> Path | None:
         if p.exists() and (p / "game" / "citadel").exists():
             return p
 
-    # 2. Check Steam appmanifest — the definitive source for where a game is installed.
-    #    Steam only keeps appmanifest_<appid>.acf in the library folder that owns the game.
+    # 2. Check Steam appmanifest
     for lib in _steam_library_folders():
         manifest = lib / "steamapps" / f"appmanifest_{DEADLOCK_APP_ID}.acf"
         if manifest.exists():
@@ -119,7 +119,7 @@ def find_deadlock_path(config: dict) -> Path | None:
             except Exception:
                 pass
 
-    # 3. hardcoded fallbacks for when VDF/manifest detection fails
+    # 3. Hardcoded fallbacks
     system = platform.system()
     candidates: list[Path] = []
 
@@ -140,9 +140,7 @@ def find_deadlock_path(config: dict) -> Path | None:
             home / ".local/share/Steam/steamapps/common/Deadlock",
         ]
 
-    # Prefer paths with the actual game executable over leftover empty dirs
-    # Proton installs the Windows binaries on Linux too, so win64/project8.exe
-    # works as a quality check on both platforms.
+    # Prefer paths with the actual game executable
     exe_candidates = [
         Path("game") / "bin" / "win64" / "project8.exe",
         Path("game") / "bin" / "linuxsteamrt64" / "project8",  # future native build
@@ -165,8 +163,7 @@ class DeadlockRPC:
         self.state = GameState()
         self.running = False
 
-        # Load hero data from API (or cache) at startup.
-        # This must happen before any hero name / asset lookups.
+        # Load hero data from API (or cache)
         exe_dir = EXE_DIR
         self._hero_store = HeroDataStore(cache_dir=exe_dir / "cache")
         self._hero_store.load()
@@ -262,7 +259,7 @@ class DeadlockRPC:
 def main():
     config_path = sys.argv[1] if len(sys.argv) > 1 else "config.json"
 
-    #resolve relative to script directory 
+    # Resolve relative to script directory
     if not Path(config_path).is_absolute():
         config_path = str(SCRIPT_DIR / config_path)
 
@@ -279,8 +276,13 @@ def main():
 
     logger.info("Starting Deadlock Discord Rich Presence...")
 
-    # Launch Deadlock with -condebug (can be disabled in config for users
-    # who manage their own Steam launch options)
+    # Check for updates before anything else
+    try:
+        check_for_updates()
+    except Exception as e:
+        logger.debug("Update check error: %s", e)
+
+    # Launch Deadlock with -condebug (disable in config if you manage your own launch options)
     if cfg.get("launch_game", True):
         logger.info("Launching Deadlock via Steam with -condebug...")
         launch_deadlock()
@@ -292,7 +294,7 @@ def main():
     # start the RPC
     app.start()
 
-    #create system tray icon, systray or console
+    # System tray or console fallback
     tray_icon = create_tray_icon(app)
 
     if tray_icon:
@@ -304,7 +306,7 @@ def main():
         finally:
             app.stop()
     else:
-        #no tray
+        # No tray available
         logger.info("Running in console mode. Press Ctrl+C to quit.")
 
         def handle_signal(sig, frame):

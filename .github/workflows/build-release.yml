@@ -1,0 +1,63 @@
+name: Build and Release
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: DeadlockRPC.exe
+            zip_name: DeadlockRPC-windows-x86_64.zip
+          - os: ubuntu-22.04
+            artifact_name: DeadlockRPC
+            zip_name: DeadlockRPC-linux-x86_64.zip
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build
+        run: python build.py
+
+      - name: Prepare release zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path release/DeadlockRPC -Force
+          Copy-Item dist/DeadlockRPC.exe release/DeadlockRPC/
+          Copy-Item src/config.json release/DeadlockRPC/
+          Copy-Item src/favicon.ico release/DeadlockRPC/
+          Compress-Archive -Path release/DeadlockRPC -DestinationPath ${{ matrix.zip_name }}
+
+      - name: Prepare release zip (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p release/DeadlockRPC
+          cp dist/DeadlockRPC release/DeadlockRPC/
+          cp src/config.json release/DeadlockRPC/
+          cp src/favicon.ico release/DeadlockRPC/
+          chmod +x release/DeadlockRPC/DeadlockRPC
+          cd release && zip -r ../${{ matrix.zip_name }} DeadlockRPC
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.zip_name }}

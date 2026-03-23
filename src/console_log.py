@@ -1,6 +1,3 @@
-## todo: maybe dynamic portrait changes ?
-## dynamic reaction portraits based on player low health / killstreak
-
 from __future__ import annotations
 
 import logging
@@ -231,17 +228,13 @@ class LogWatcher:
 
         self.state.map_name = map_name
 
-        # Map -> mode (only for maps with a known specific mode, e.g. sandbox)
-        # dl_midtown is shared by all match types so it maps to UNKNOWN
+        # Map -> mode (e.g. sandbox). dl_midtown is shared so it maps to UNKNOWN
         mapped_mode = self.map_to_mode.get(map_name)
         if mapped_mode and mapped_mode != MatchMode.UNKNOWN:
             self.state.match_mode = mapped_mode
 
-        # Hideout maps
+        # Hideout — clean reset so stale match data doesn't leak
         if map_name in self.hideout_maps:
-            # The hideout runs local helper bots and fake game-state transitions.
-            # Treat it as a clean return to hideout so that stale match data does
-            # not leak into the next real match.
             self.state.enter_hideout()
             self.state.map_name = map_name
             self._open_hero_window()
@@ -267,10 +260,9 @@ class LogWatcher:
         self._hero_window_open = False
 
     def _prepare_match_hero_tracking(self) -> None:
-        # clear the hideout hero and reopen the hero window so the first
-        # in-match hero signal is accepted.  The hideout hero is not
-        # necessarily the match hero bc hero selection can change it in
-        # standard 6v6, and Street Brawl assigns randomly.
+        # Clear hideout hero and reopen the window so the first in-match
+        # signal is accepted (hero selection can change it, Street Brawl
+        # assigns randomly).
         self.state.hero_key = None
         self.state.is_transformed = False
         self._hero_window_open = True
@@ -282,8 +274,7 @@ class LogWatcher:
             return
 
         if self.state.phase in (GamePhase.MATCH_INTRO, GamePhase.IN_MATCH):
-            # Sandbox allows free hero swapping like the hideout, so skip
-            # the lock-in checks and never close the hero window.
+            # Sandbox allows free hero swapping like the hideout
             if self.state.match_mode != MatchMode.SANDBOX:
                 if self.state.hero_key is not None and hero_norm != self.state.hero_key:
                     return
@@ -341,10 +332,8 @@ class LogWatcher:
         current_map = (self.state.map_name or "").lower()
         in_hideout_map = current_map in self.hideout_maps
 
-        # capture local account ID from any line containing a Steam ID.
-        # this is a standalone check (not part of the elif chain) because
-        # [U:1:XXXXX] appears in many log lines that also carry other
-        # patterns (server_connect, player_info, etc.)
+        # Standalone check — [U:1:XXXXX] appears in lines that also match
+        # other patterns, so it can't be in the elif chain
         if self._local_account_id is None:
             if m := self._match("local_account_id", line):
                 self._local_account_id = int(m.group(1))
@@ -479,9 +468,7 @@ class LogWatcher:
             if self.state.phase in (GamePhase.HIDEOUT, GamePhase.PARTY_HIDEOUT):
                 self.state.phase = GamePhase.PARTY_HIDEOUT if self.state.in_party else GamePhase.HIDEOUT
 
-        # Bot mode only classify as BOT_MATCH if we haven't already
-        # identified the mode from player count (standard/street brawl
-        # matches also have bots for lane creeps, jungle camps, etc.)
+        # Only set BOT_MATCH if mode is still unknown (real matches have bots too)
         elif m := self._match("bot_init", line):
             if self.state.phase != GamePhase.SPECTATING and not in_hideout_map:
                 difficulty = m.group(1).replace("k_ECitadelBotDifficulty_", "")
@@ -510,7 +497,7 @@ class LogWatcher:
             self._open_hero_window()
             self.state.reset()
 
-        # Player info also get match mode from player count
+        # Reclassify match mode from player count
         elif m := self._match("player_info", line):
             if self.state.phase != GamePhase.SPECTATING:
                 self.state.player_count = int(m.group(1))
