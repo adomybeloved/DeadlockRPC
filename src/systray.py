@@ -6,6 +6,8 @@ import threading
 import time
 from pathlib import Path
 
+from locale import t
+
 logger = logging.getLogger("deadlock-rpc")
 
 def _bundle_dir() -> Path:
@@ -34,15 +36,19 @@ def create_tray_icon(app):
 
     def get_status_text():
         phase = app.state.phase.name.replace("_", " ").title()
-        hero = app.state.hero_display_name or "None"
-        mode = app.state.mode_display() if app.state.is_in_match else "—"
-        return f"Phase: {phase}\nHero: {hero}\nMode: {mode}"
+        hero = app.state.hero_display_name or t("tray.no_hero")
+        mode = app.state.mode_display() if app.state.is_in_match else t("tray.no_mode")
+        return (
+            f"{t('tray.phase_label', phase=phase)}\n"
+            f"{t('tray.hero_label', hero=hero)}\n"
+            f"{t('tray.mode_label', mode=mode)}"
+        )
 
     def on_status(icon, item):
         """Show current status as a notification."""
         status = get_status_text()
         try:
-            icon.notify(status, "Deadlock RPC Status")
+            icon.notify(status, t("tray.status_title"))
         except Exception:
             logger.info("Status:\n%s", status)
 
@@ -61,24 +67,24 @@ def create_tray_icon(app):
 
     def on_quit(icon, item):
         """Quit the application."""
-        logger.info("Quit requested from tray")
+        logger.info(t("tray.quit") + " requested from tray")
         app.running = False
         icon.stop()
 
     # Build menu
     menu = pystray.Menu(
-        pystray.MenuItem("Deadlock RPC", None, enabled=False),
+        pystray.MenuItem(t("tray.title"), None, enabled=False),
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("Show Status", on_status),
-        pystray.MenuItem("Open Log", on_open_log),
+        pystray.MenuItem(t("tray.status"), on_status),
+        pystray.MenuItem(t("tray.open_log"), on_open_log),
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("Quit", on_quit),
+        pystray.MenuItem(t("tray.quit"), on_quit),
     )
 
     icon = pystray.Icon(
         name="deadlock-rpc",
         icon=image,
-        title="Deadlock RPC",
+        title=t("tray.title"),
         menu=menu,
     )
 
@@ -89,9 +95,9 @@ def create_tray_icon(app):
                 phase = app.state.phase.name.replace("_", " ").title()
                 hero = app.state.hero_display_name
                 if hero:
-                    icon.title = f"Deadlock RPC — {hero} ({phase})"
+                    icon.title = t("tray.tooltip", hero=hero, phase=phase)
                 else:
-                    icon.title = f"Deadlock RPC — {phase}"
+                    icon.title = t("tray.tooltip_no_hero", phase=phase)
             except Exception:
                 pass
             time.sleep(5)

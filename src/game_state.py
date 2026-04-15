@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
+from locale import t
+
 if TYPE_CHECKING:
     from hero_data import HeroDataStore
 
@@ -59,18 +61,24 @@ class MatchMode(Enum):
     STREET_BRAWL = auto()
 
 
-MODE_DISPLAY: dict[MatchMode, str] = {
-    MatchMode.UNKNOWN: "Playing a Match",
-    MatchMode.UNRANKED: "Playing Standard (6v6)",
-    MatchMode.RANKED: "Playing Ranked (6v6)",
-    MatchMode.HERO_LABS: "Playing Hero Labs",
-    MatchMode.PRIVATE_LOBBY: "Playing Private Lobby",
-    MatchMode.BOT_MATCH: "Playing in a Bot Match",
-    MatchMode.TUTORIAL: "Tutorial",
-    MatchMode.SANDBOX: "Training in Sandbox Mode",
-    MatchMode.CALIBRATION: "Placement Match",
-    MatchMode.STREET_BRAWL: "Playing Street Brawl (4v4)",
+_MODE_KEYS: dict[MatchMode, str] = {
+    MatchMode.UNKNOWN: "modes.unknown",
+    MatchMode.UNRANKED: "modes.unranked",
+    MatchMode.RANKED: "modes.ranked",
+    MatchMode.HERO_LABS: "modes.hero_labs",
+    MatchMode.PRIVATE_LOBBY: "modes.private_lobby",
+    MatchMode.BOT_MATCH: "modes.bot_match",
+    MatchMode.TUTORIAL: "modes.tutorial",
+    MatchMode.SANDBOX: "modes.sandbox",
+    MatchMode.CALIBRATION: "modes.calibration",
+    MatchMode.STREET_BRAWL: "modes.street_brawl",
 }
+
+
+def _mode_display(mode: MatchMode) -> str:
+    """Return the localised display string for a match mode."""
+    key = _MODE_KEYS.get(mode)
+    return t(key) if key else "Match"
 
 # Hero names and asset keys are now loaded dynamically from the API.
 # See hero_data.py — HeroDataStore provides display_name(), asset_key(), hideout_text().
@@ -125,7 +133,20 @@ class GameState:
         """Hero-specific hideout presence text from the API, e.g. 'Mixing Drinks in the Hideout'."""
         if self.hero_key and _hero_store:
             return _hero_store.hideout_text(self.hero_key)
-        return "In the Hideout"
+        return t("heroes.hideout_default")
+
+    @property
+    def hero_display_name_accusative(self) -> str | None:
+        """Hero display name in the accusative case (кого?).
+
+        Used for Russian 'Играет за [кого?]'.
+        Falls back to nominative if no accusative form is defined.
+        """
+        if self.hero_key is None:
+            return None
+        if _hero_store:
+            return _hero_store.display_name_accusative(self.hero_key)
+        return self.hero_display_name
 
     @property
     def in_party(self) -> bool:
@@ -136,7 +157,7 @@ class GameState:
         return self.phase in (GamePhase.IN_MATCH, GamePhase.MATCH_INTRO)
 
     def mode_display(self) -> str:
-        return MODE_DISPLAY.get(self.match_mode, "Match")
+        return _mode_display(self.match_mode)
 
     def enter_main_menu(self) -> None:
         self.phase = GamePhase.MAIN_MENU

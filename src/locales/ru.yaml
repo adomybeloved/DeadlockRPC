@@ -1,0 +1,331 @@
+ru:
+  presence:
+    main_menu: "Главное Меню"
+    hideout_default: "В Убежище"
+    playing_solo: "Соло (1 из 6)"
+    party_of: "Группа из %{size}"
+    looking_for_match: "Поиск Матча..."
+    in_queue: "В очереди %{size}"
+    playing_as: "Играет за %{hero}"
+    post_match: "После Матча"
+    spectating: "Наблюдает за Матчем"
+
+  modes:
+    unknown: "В Матче"
+    unranked: "Стандартный (6v6)"
+    ranked: "Рейтинговый (6v6)"
+    hero_labs: "Hero Labs"
+    private_lobby: "Приватное Лобби"
+    bot_match: "Матч с Ботами"
+    tutorial: "Обучение"
+    sandbox: "Тренировка"
+    calibration: "Калибровочный Матч"
+    street_brawl: "Street Brawl (4v4)"
+
+  tray:
+    title: "Deadlock RPC"
+    status: "Показать Статус"
+    open_log: "Открыть Лог"
+    quit: "Выход"
+    status_title: "Статус Deadlock RPC"
+    tooltip: "Deadlock RPC — %{hero} (%{phase})"
+    tooltip_no_hero: "Deadlock RPC — %{phase}"
+    phase_label: "Фаза: %{phase}"
+    hero_label: "Герой: %{hero}"
+    mode_label: "Режим: %{mode}"
+    no_hero: "Нет"
+    no_mode: "—"
+
+  main:
+    connecting_discord: "Подключение к Discord..."
+    connected_discord: "✓ Подключено к Discord"
+    cannot_connect_discord: "Не удалось подключиться к Discord. Запущен ли Discord?"
+    no_console_log: "Путь к console.log не найден. Невозможно продолжить."
+    config_not_found: "Конфигурация не найдена: %{path}"
+    set_discord_id: "Укажите Discord Application ID в config.json"
+    create_discord_app: "Создайте приложение: https://discord.com/developers/applications"
+    starting: "Запуск Deadlock Discord Rich Presence..."
+    launching_game: "Запуск Deadlock через Steam с -condebug..."
+    launch_disabled: "launch_game отключён — убедитесь, что -condebug указан в параметрах запуска Steam."
+    running_tray: "Работает в системном трее. Нажмите ПКМ на иконку для опций."
+    running_console: "Работает в консольном режиме. Нажмите Ctrl+C для выхода."
+    stopped: "Остановлено."
+    deadlock_found: "Deadlock: %{path}"
+    log_path: "Лог: %{path}"
+    deadlock_not_found: "Не удалось найти Deadlock. Укажите deadlock_install_path в config.json."
+
+  watcher:
+    deadlock_detected: "Deadlock обнаружен!"
+    deadlock_closed: "Deadlock закрыт."
+    console_log_not_found: >-
+      console.log не найден по пути %{path} — Deadlock запущен с -condebug?
+      Добавьте -condebug в параметры запуска Steam или перезапустите Deadlock через это приложение.
+
+  updater:
+    checking: "Проверка обновлений..."
+    no_update: "Обновлений нет."
+    new_version: "Доступна новая версия: %{tag} (текущая: %{current})"
+    update_skipped: "Обновление пропущено."
+    prompt_title: "Обновление DeadlockRPC"
+    prompt_message: "Доступна новая версия DeadlockRPC (%{tag}).\n\nОбновить сейчас?"
+    prompt_terminal: "DeadlockRPC %{tag} доступен. Обновить? [y/N] "
+    downloading: "Скачивание %{name} ..."
+    download_complete: "Скачивание завершено. Перезапуск..."
+    update_failed: "Ошибка обновления: %{error}"
+    no_windows_binary: "Не найден бинарник для Windows в релизе."
+    no_linux_binary: "Не найден бинарник для Linux в релизе."
+    git_pulling: "Запуск git pull..."
+    git_pull_failed: "git pull завершился с ошибкой: %{error}"
+    already_up_to_date: "Уже актуальная версия."
+    git_updated: "Обновлено. Перезапуск..."
+    not_git_repo: "Не git-репозиторий и не бинарник — автообновление невозможно."
+
+  rpc:
+    connected_pipe: "Подключён к Discord RPC через pipe %{pipe}"
+    pipe_unavailable: "Pipe %{pipe} недоступен: %{error}"
+    no_pipe: "Не удалось подключиться к Discord ни через один IPC pipe. Запущен ли Discord?"
+    invalid_id: "Неверный Discord Application ID"
+    connection_lost: "Соединение с Discord потеряно"
+
+  heroes:
+    hideout_default: "В Убежище"
+    inferno:
+      name: "Инфернус"
+      name_acc: "Инфернуса"
+      hideout: "Мешает Коктейли в Убежище"
+    gigawatt:
+      name: "Семь"
+      name_acc: "Семь"
+      hideout: "Строит Планы в Убежище"
+    hornet:
+      name: "Виндикта"
+      name_acc: "Виндикту"
+      hideout: "Мрачно Сидит в Убежище"
+    ghost:
+      name: "Леди Гайст"
+      name_acc: "Леди Гайст"
+      hideout: "Блистает в Убежище"
+    atlas:
+      name: "Абрамс"
+      name_acc: "Абрамса"
+      hideout: "Расследует в Убежище"
+    wraith:
+      name: "Тень"
+      name_acc: "Тень"
+      hideout: "Играет в Азартные Игры в Убежище"
+    forge:
+      name: "Макгиннис"
+      name_acc: "Макгиннис"
+      hideout: "Мастерит в Убежище"
+    chrono:
+      name: "Парадокс"
+      name_acc: "Парадокс"
+      hideout: "Плетёт Интриги в Убежище"
+    dynamo:
+      name: "Динамо"
+      name_acc: "Динамо"
+      hideout: "Философствует в Убежище"
+    kelvin:
+      name: "Кельвин"
+      name_acc: "Кельвина"
+      hideout: "Охлаждается в Убежище"
+    haze:
+      name: "Пелена"
+      name_acc: "Пелену"
+      hideout: "Ходит во Сне по Убежищу"
+    astro:
+      name: "Холлидей"
+      name_acc: "Холлидея"
+      hideout: "Разгадывает Тайны в Убежище"
+    bebop:
+      name: "Бибоп"
+      name_acc: "Бибопа"
+      hideout: "Игнорирует Хлыста в Убежище"
+    nano:
+      name: "Калико"
+      name_acc: "Калико"
+      hideout: "Играет с Авой в Убежище"
+    orion:
+      name: "Серый Коготь"
+      name_acc: "Серого Когтя"
+      hideout: "Скорбит в Убежище"
+    krill:
+      name: "Мо и Мелкий"
+      name_acc: "Мо и Мелкого"
+      hideout: "В Убежище"
+    shiv:
+      name: "Заточка"
+      name_acc: "Заточку"
+      hideout: "Играет с Ножами в Убежище"
+    tengu:
+      name: "Плющик"
+      name_acc: "Плющика"
+      hideout: "Скучает по Арройо в Убежище"
+    kali:
+      name: "Кали"
+      name_acc: "Кали"
+      hideout: "В Убежище"
+    warden:
+      name: "Дозорный"
+      name_acc: "Дозорного"
+      hideout: "Тренируется в Убежище"
+    yamato:
+      name: "Ямато"
+      name_acc: "Ямато"
+      hideout: "Предаётся Воспоминаниям в Убежище"
+    lash:
+      name: "Хлыст"
+      name_acc: "Хлыста"
+      hideout: "Думает о Хлысте в Убежище"
+    viscous:
+      name: "Вязкус"
+      name_acc: "Вязкуса"
+      hideout: "Мечтает, чтобы Убежище было Кубом"
+    gunslinger:
+      name: "Ганслингер"
+      name_acc: "Ганслингера"
+      hideout: "В Убежище"
+    yakuza:
+      name: "Босс"
+      name_acc: "Босса"
+      hideout: "В Убежище"
+    tokamak:
+      name: "Токамак"
+      name_acc: "Токамака"
+      hideout: "В Убежище"
+    wrecker:
+      name: "Крушитель"
+      name_acc: "Крушителя"
+      hideout: "В Убежище"
+    rutger:
+      name: "Рутгер"
+      name_acc: "Рутгера"
+      hideout: "В Убежище"
+    synth:
+      name: "Карман"
+      name_acc: "Кармана"
+      hideout: "Дуется в Убежище"
+    thumper:
+      name: "Тампер"
+      name_acc: "Тампера"
+      hideout: "В Убежище"
+    mirage:
+      name: "Мираж"
+      name_acc: "Миража"
+      hideout: "Мечтает о Вайоминге в Убежище"
+    slork:
+      name: "Фатом"
+      name_acc: "Фатома"
+      hideout: "В Убежище"
+    cadence:
+      name: "Каденс"
+      name_acc: "Каденс"
+      hideout: "В Убежище"
+    bomber:
+      name: "Бомбер"
+      name_acc: "Бомбера"
+      hideout: "В Убежище"
+    shieldguy:
+      name: "Щитовик"
+      name_acc: "Щитовика"
+      hideout: "В Убежище"
+    viper:
+      name: "Гадюка"
+      name_acc: "Гадюку"
+      hideout: "Готовит Бражку в Убежище"
+    vandal:
+      name: "Вандал"
+      name_acc: "Вандала"
+      hideout: "В Убежище"
+    magician:
+      name: "Синклер"
+      name_acc: "Синклера"
+      hideout: "Колдует в Убежище"
+    trapper:
+      name: "Ловец"
+      name_acc: "Ловца"
+      hideout: "В Убежище"
+    operative:
+      name: "Ворон"
+      name_acc: "Ворона"
+      hideout: "В Убежище"
+    vampirebat:
+      name: "Мина"
+      name_acc: "Мину"
+      hideout: "Перекусывает в Убежище"
+    drifter:
+      name: "Скиталец"
+      name_acc: "Скитальца"
+      hideout: "Бродит по Убежищу"
+    priest:
+      name: "Венатор"
+      name_acc: "Венатора"
+      hideout: "Благословляет Патроны в Убежище"
+    frank:
+      name: "Виктор"
+      name_acc: "Виктора"
+      hideout: "Мрачно Сидит в Убежище"
+    bookworm:
+      name: "Пейдж"
+      name_acc: "Пейдж"
+      hideout: "Читает в Убежище"
+    boho:
+      name: "Бохо"
+      name_acc: "Бохо"
+      hideout: "В Убежище"
+    doorman:
+      name: "Швейцар"
+      name_acc: "Швейцара"
+      hideout: "К Вашим Услугам в Убежище"
+    skyrunner:
+      name: "Скайраннер"
+      name_acc: "Скайраннера"
+      hideout: "В Убежище"
+    swan:
+      name: "Свон"
+      name_acc: "Свона"
+      hideout: "В Убежище"
+    punkgoat:
+      name: "Билли"
+      name_acc: "Билли"
+      hideout: "Бушует в Убежище"
+    druid:
+      name: "Друид"
+      name_acc: "Друида"
+      hideout: "В Убежище"
+    graf:
+      name: "Граф"
+      name_acc: "Графа"
+      hideout: "В Убежище"
+    fortuna:
+      name: "Фортуна"
+      name_acc: "Фортуну"
+      hideout: "В Убежище"
+    necro:
+      name: "Грейвс"
+      name_acc: "Грейвса"
+      hideout: "Играет с Мёртвыми в Убежище"
+    fencer:
+      name: "Аполлон"
+      name_acc: "Аполлона"
+      hideout: "Стремится к Совершенству в Убежище"
+    airheart:
+      name: "Эйрхарт"
+      name_acc: "Эйрхарт"
+      hideout: "В Убежище"
+    familiar:
+      name: "Дрём"
+      name_acc: "Дрёма"
+      hideout: "Видит Сладкие Сны в Убежище"
+    werewolf:
+      name: "Сильвер"
+      name_acc: "Сильвера"
+      hideout: "Вспоминает Прошлую Ночь в Убежище"
+    unicorn:
+      name: "Селеста"
+      name_acc: "Селесту"
+      hideout: "Убирает Блёстки в Убежище"
+    opera:
+      name: "Опера"
+      name_acc: "Оперу"
+      hideout: "В Убежище"

@@ -17,6 +17,7 @@ from presence import DiscordRPC
 from systray import create_tray_icon
 from hero_data import HeroDataStore
 from updater import check_and_prompt as check_for_updates
+from locale import t
 
 _FROZEN = getattr(sys, "_MEIPASS", None)
 BUNDLE_DIR = Path(_FROZEN) if _FROZEN else Path(__file__).parent
@@ -174,10 +175,10 @@ class DeadlockRPC:
             self.console_log_path = (
                 self.deadlock_path / self.config.get("console_log_relative_path", "game/citadel/console.log")
             )
-            logger.info("Deadlock: %s", self.deadlock_path)
-            logger.info("Log: %s", self.console_log_path)
+            logger.info(t("main.deadlock_found", path=self.deadlock_path))
+            logger.info(t("main.log_path", path=self.console_log_path))
         else:
-            logger.warning("Could not find Deadlock. Set deadlock_install_path in config.json.")
+            logger.warning(t("main.deadlock_not_found"))
             self.console_log_path = None
 
         self.rpc = DiscordRPC(
@@ -191,14 +192,14 @@ class DeadlockRPC:
     def start(self) -> None:
         self.running = True
 
-        logger.info("Connecting to Discord...")
+        logger.info(t("main.connecting_discord"))
         if not self.rpc.connect():
-            logger.error("Could not connect to Discord. Is Discord running?")
+            logger.error(t("main.cannot_connect_discord"))
             sys.exit(1)
-        logger.info("✓ Connected to Discord")
+        logger.info(t("main.connected_discord"))
 
         if not self.console_log_path:
-            logger.error("No console log path. Cannot continue.")
+            logger.error(t("main.no_console_log"))
             sys.exit(1)
 
         self.watcher = LogWatcher(
@@ -245,7 +246,7 @@ class DeadlockRPC:
         if self.watcher:
             self.watcher.stop()
         self.rpc.disconnect()
-        logger.info("Stopped.")
+        logger.info(t("main.stopped"))
 
     def _on_state_change(self, state: GameState) -> None:
         hero = state.hero_display_name or "—"
@@ -264,17 +265,17 @@ def main():
         config_path = str(SCRIPT_DIR / config_path)
 
     if not Path(config_path).exists():
-        logger.error("Config not found: %s", config_path)
+        logger.error(t("main.config_not_found", path=config_path))
         sys.exit(1)
 
     with open(config_path) as f:
         cfg = json.load(f)
     if cfg.get("discord_application_id", "").startswith("YOUR_"):
-        logger.error("Set your Discord Application ID in config.json")
-        logger.info("Create one at https://discord.com/developers/applications")
+        logger.error(t("main.set_discord_id"))
+        logger.info(t("main.create_discord_app"))
         sys.exit(1)
 
-    logger.info("Starting Deadlock Discord Rich Presence...")
+    logger.info(t("main.starting"))
 
     # Check for updates before anything else
     try:
@@ -284,10 +285,10 @@ def main():
 
     # Launch Deadlock with -condebug (disable in config if you manage your own launch options)
     if cfg.get("launch_game", True):
-        logger.info("Launching Deadlock via Steam with -condebug...")
+        logger.info(t("main.launching_game"))
         launch_deadlock()
     else:
-        logger.info("launch_game is disabled — make sure -condebug is in your Steam launch options.")
+        logger.info(t("main.launch_disabled"))
 
     app = DeadlockRPC(cfg)
 
@@ -298,7 +299,7 @@ def main():
     tray_icon = create_tray_icon(app)
 
     if tray_icon:
-        logger.info("Running in system tray. Right-click the icon to see options.")
+        logger.info(t("main.running_tray"))
         try:
             tray_icon.run()
         except KeyboardInterrupt:
@@ -307,7 +308,7 @@ def main():
             app.stop()
     else:
         # No tray available
-        logger.info("Running in console mode. Press Ctrl+C to quit.")
+        logger.info(t("main.running_console"))
 
         def handle_signal(sig, frame):
             app.running = False

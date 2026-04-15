@@ -18,6 +18,8 @@ import time
 from pathlib import Path
 from typing import TypedDict
 
+from locale import t
+
 logger = logging.getLogger(__name__)
 
 # ── types ──────────────────────────────────────────────────────────────────────
@@ -93,18 +95,56 @@ class HeroDataStore:
         return self._data.get(codename.lower())
 
     def display_name(self, codename: str) -> str:
-        """Return display name, falling back to a title-cased version of the key."""
+        """Return localised display name for the hero.
+
+        Priority:
+        1. YAML locale translation  (heroes.<codename>.name)
+        2. API / cache data          (HeroInfo.name)
+        3. Title-cased codename      (fallback)
+        """
+        locale_key = f"heroes.{codename.lower()}.name"
+        translated = t(locale_key)
+        if translated != locale_key:
+            return translated
+
         info = self.get(codename)
         if info:
             return info["name"]
         return codename.replace("_", " ").title()
 
+    def display_name_accusative(self, codename: str) -> str:
+        """Return the accusative case form of the hero name.
+
+        Used for constructs like 'Играет за [кого?]' in Russian.
+        Falls back to the nominative form if no accusative is defined.
+        """
+        locale_key = f"heroes.{codename.lower()}.name_acc"
+        translated = t(locale_key)
+        if translated != locale_key:
+            return translated
+        return self.display_name(codename)
+
     def hideout_text(self, codename: str) -> str:
-        """Return the hideout presence text (e.g. "Mixing Drinks in the Hideout")."""
+        """Return the hideout presence text.
+
+        Priority:
+        1. YAML locale translation  (heroes.<codename>.hideout)
+        2. API / cache data          (HeroInfo.hideout_text)
+        3. Default fallback          (heroes.hideout_default)
+        """
+        locale_key = f"heroes.{codename.lower()}.hideout"
+        translated = t(locale_key)
+
+        # t() returns the key itself when no translation is found
+        if translated != locale_key:
+            return translated
+
+        # Fall back to API / cache data
         info = self.get(codename)
+        default = t("heroes.hideout_default")
         if info and info.get("hideout_text") and info["hideout_text"] != "In the Hideout":
             return info["hideout_text"]
-        return "In the Hideout"
+        return default
 
     def asset_key(self, codename: str) -> str:
         """Return Discord named-asset key for the hero, e.g. "hero_inferno"."""

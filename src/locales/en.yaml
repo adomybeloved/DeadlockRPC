@@ -1,0 +1,271 @@
+en:
+  presence:
+    main_menu: "Main Menu"
+    hideout_default: "In the Hideout"
+    playing_solo: "Playing Solo (1 of 6)"
+    party_of: "Party of %{size}"
+    looking_for_match: "Looking for Match..."
+    in_queue: "In Queue %{size}"
+    playing_as: "Playing as %{hero}"
+    post_match: "Post-Match"
+    spectating: "Spectating a Match"
+
+  modes:
+    unknown: "Playing a Match"
+    unranked: "Playing Standard (6v6)"
+    ranked: "Playing Ranked (6v6)"
+    hero_labs: "Playing Hero Labs"
+    private_lobby: "Playing Private Lobby"
+    bot_match: "Playing in a Bot Match"
+    tutorial: "Tutorial"
+    sandbox: "Training in Sandbox Mode"
+    calibration: "Placement Match"
+    street_brawl: "Playing Street Brawl (4v4)"
+
+  tray:
+    title: "Deadlock RPC"
+    status: "Show Status"
+    open_log: "Open Log"
+    quit: "Quit"
+    status_title: "Deadlock RPC Status"
+    tooltip: "Deadlock RPC — %{hero} (%{phase})"
+    tooltip_no_hero: "Deadlock RPC — %{phase}"
+    phase_label: "Phase: %{phase}"
+    hero_label: "Hero: %{hero}"
+    mode_label: "Mode: %{mode}"
+    no_hero: "None"
+    no_mode: "—"
+
+  main:
+    connecting_discord: "Connecting to Discord..."
+    connected_discord: "✓ Connected to Discord"
+    cannot_connect_discord: "Could not connect to Discord. Is Discord running?"
+    no_console_log: "No console log path. Cannot continue."
+    config_not_found: "Config not found: %{path}"
+    set_discord_id: "Set your Discord Application ID in config.json"
+    create_discord_app: "Create one at https://discord.com/developers/applications"
+    starting: "Starting Deadlock Discord Rich Presence..."
+    launching_game: "Launching Deadlock via Steam with -condebug..."
+    launch_disabled: "launch_game is disabled — make sure -condebug is in your Steam launch options."
+    running_tray: "Running in system tray. Right-click the icon to see options."
+    running_console: "Running in console mode. Press Ctrl+C to quit."
+    stopped: "Stopped."
+    deadlock_found: "Deadlock: %{path}"
+    log_path: "Log: %{path}"
+    deadlock_not_found: "Could not find Deadlock. Set deadlock_install_path in config.json."
+
+  watcher:
+    deadlock_detected: "Deadlock detected!"
+    deadlock_closed: "Deadlock closed."
+    console_log_not_found: >-
+      console.log not found at %{path} - is Deadlock running with -condebug?
+      Add -condebug to Steam launch options or restart Deadlock via this app.
+
+  updater:
+    checking: "Checking for updates..."
+    no_update: "No update available."
+    new_version: "New version available: %{tag} (current: %{current})"
+    update_skipped: "Update skipped."
+    prompt_title: "DeadlockRPC Update"
+    prompt_message: "A new version of DeadlockRPC is available (%{tag}).\n\nUpdate now?"
+    prompt_terminal: "DeadlockRPC %{tag} is available. Update now? [y/N] "
+    downloading: "Downloading %{name} ..."
+    download_complete: "Download complete. Restarting..."
+    update_failed: "Update failed: %{error}"
+    no_windows_binary: "No Windows binary found in release assets."
+    no_linux_binary: "No Linux binary found in release assets."
+    git_pulling: "Running git pull..."
+    git_pull_failed: "git pull failed: %{error}"
+    already_up_to_date: "Already up to date."
+    git_updated: "Updated. Restarting..."
+    not_git_repo: "Not a git repo and not a binary — can't auto-update."
+
+  rpc:
+    connected_pipe: "Connected to Discord RPC on pipe %{pipe}"
+    pipe_unavailable: "Pipe %{pipe} unavailable: %{error}"
+    no_pipe: "Could not connect to Discord on any IPC pipe. Is Discord running?"
+    invalid_id: "Invalid Discord Application ID"
+    connection_lost: "Discord connection lost"
+
+  heroes:
+    hideout_default: "In the Hideout"
+    inferno:
+      name: "Infernus"
+      hideout: "Mixing Drinks in the Hideout"
+    gigawatt:
+      name: "Seven"
+      hideout: "Plotting in the Hideout"
+    hornet:
+      name: "Vindicta"
+      hideout: "Brooding in the Hideout"
+    ghost:
+      name: "Lady Geist"
+      hideout: "Being Fabulous in the Hideout"
+    atlas:
+      name: "Abrams"
+      hideout: "Investigating the Hideout"
+    wraith:
+      name: "Wraith"
+      hideout: "Gambling in the Hideout"
+    forge:
+      name: "McGinnis"
+      hideout: "Tinkering in the Hideout"
+    chrono:
+      name: "Paradox"
+      hideout: "Scheming in the Hideout"
+    dynamo:
+      name: "Dynamo"
+      hideout: "Pontificating in the Hideout"
+    kelvin:
+      name: "Kelvin"
+      hideout: "Chilling in the Hideout"
+    haze:
+      name: "Haze"
+      hideout: "Sleep Walking in the Hideout"
+    astro:
+      name: "Holliday"
+      hideout: "Solving Mysteries in the Hideout"
+    bebop:
+      name: "Bebop"
+      hideout: "Ignoring Lash in the Hideout"
+    nano:
+      name: "Calico"
+      hideout: "Playing With Ava in the Hideout"
+    orion:
+      name: "Grey Talon"
+      hideout: "Mourning in the Hideout"
+    krill:
+      name: "Mo & Krill"
+      hideout: "In the Hideout"
+    shiv:
+      name: "Shiv"
+      hideout: "Playing With Knives in the Hideout"
+    tengu:
+      name: "Ivy"
+      hideout: "Wishing the Arroyos were in the Hideout"
+    kali:
+      name: "Kali"
+      hideout: "In the Hideout"
+    warden:
+      name: "Warden"
+      hideout: "Training in the Hideout"
+    yamato:
+      name: "Yamato"
+      hideout: "Reminiscing in the Hideout"
+    lash:
+      name: "Lash"
+      hideout: "Thinking About Lash in the Hideout"
+    viscous:
+      name: "Viscous"
+      hideout: "Wishing the Hideout was The Cube"
+    gunslinger:
+      name: "Gunslinger"
+      hideout: "In the Hideout"
+    yakuza:
+      name: "The Boss"
+      hideout: "In the Hideout"
+    tokamak:
+      name: "Tokamak"
+      hideout: "In the Hideout"
+    wrecker:
+      name: "Wrecker"
+      hideout: "In the Hideout"
+    rutger:
+      name: "Rutger"
+      hideout: "In the Hideout"
+    synth:
+      name: "Pocket"
+      hideout: "Sulking in the Hideout"
+    thumper:
+      name: "Thumper"
+      hideout: "In the Hideout"
+    mirage:
+      name: "Mirage"
+      hideout: "Dreaming of Wyoming in the Hideout"
+    slork:
+      name: "Fathom"
+      hideout: "In the Hideout"
+    cadence:
+      name: "Cadence"
+      hideout: "In the Hideout"
+    bomber:
+      name: "Bomber"
+      hideout: "In the Hideout"
+    shieldguy:
+      name: "Shield Guy"
+      hideout: "In the Hideout"
+    viper:
+      name: "Vyper"
+      hideout: "Making Pruno in the Hideout"
+    vandal:
+      name: "Vandal"
+      hideout: "In the Hideout"
+    magician:
+      name: "Sinclair"
+      hideout: "Working Magic in the Hideout"
+    trapper:
+      name: "Trapper"
+      hideout: "In the Hideout"
+    operative:
+      name: "Raven"
+      hideout: "In the Hideout"
+    vampirebat:
+      name: "Mina"
+      hideout: "Grabbing a bite in the Hideout"
+    drifter:
+      name: "Drifter"
+      hideout: "Prowling in the Hideout"
+    priest:
+      name: "Venator"
+      hideout: "Blessing Ammunition in the Hideout"
+    frank:
+      name: "Victor"
+      hideout: "Brooding in the Hideout"
+    bookworm:
+      name: "Paige"
+      hideout: "Reading in the Hideout"
+    boho:
+      name: "Boho"
+      hideout: "In the Hideout"
+    doorman:
+      name: "The Doorman"
+      hideout: "At Your Service in the Hideout"
+    skyrunner:
+      name: "Skyrunner"
+      hideout: "In the Hideout"
+    swan:
+      name: "Swan"
+      hideout: "In the Hideout"
+    punkgoat:
+      name: "Billy"
+      hideout: "Ranting in the Hideout"
+    druid:
+      name: "Druid"
+      hideout: "In the Hideout"
+    graf:
+      name: "Graf"
+      hideout: "In the Hideout"
+    fortuna:
+      name: "Fortuna"
+      hideout: "In the Hideout"
+    necro:
+      name: "Graves"
+      hideout: "Playing With The Dead in the Hideout"
+    fencer:
+      name: "Apollo"
+      hideout: "Striving Towards Perfection in the Hideout"
+    airheart:
+      name: "Airheart"
+      hideout: "In the Hideout"
+    familiar:
+      name: "Rem"
+      hideout: "Having Sweet Dreams in the Hideout"
+    werewolf:
+      name: "Silver"
+      hideout: "Figuring Out What Happened Last Night in the Hideout"
+    unicorn:
+      name: "Celeste"
+      hideout: "Cleaning Up Glitter in the Hideout"
+    opera:
+      name: "Opera"
+      hideout: "In the Hideout"

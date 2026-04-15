@@ -14,10 +14,12 @@ from pathlib import Path
 
 import requests
 
+from locale import t
+
 logger = logging.getLogger(__name__)
 
-GITHUB_REPO = "Jelloge/Deadlock-Rich-Presence"
-CURRENT_VERSION = "1.5"
+GITHUB_REPO = "adomybeloved/DeadlockRPC"
+CURRENT_VERSION = "1.6"
 
 # Whether we're running as a PyInstaller binary
 _FROZEN = getattr(sys, "_MEIPASS", None) is not None
@@ -81,8 +83,8 @@ def _prompt_windows(release: dict) -> bool:
         IDYES = 6
         result = ctypes.windll.user32.MessageBoxW(
             0,
-            f"A new version of DeadlockRPC is available ({tag}).\n\nUpdate now?",
-            "DeadlockRPC Update",
+            t("updater.prompt_message", tag=tag),
+            t("updater.prompt_title"),
             MB_YESNO | MB_ICONINFORMATION,
         )
         return result == IDYES
@@ -93,11 +95,11 @@ def _prompt_windows(release: dict) -> bool:
 def _prompt_linux(release: dict) -> bool:
     """Try zenity, then kdialog, then terminal input."""
     tag = release.get("tag_name", "?")
-    msg = f"A new version of DeadlockRPC is available ({tag}).\n\nUpdate now?"
+    msg = t("updater.prompt_message", tag=tag)
 
     for cmd in [
-        ["zenity", "--question", "--title=DeadlockRPC Update", "--text", msg],
-        ["kdialog", "--yesno", msg, "--title", "DeadlockRPC Update"],
+        ["zenity", "--question", f"--title={t('updater.prompt_title')}", "--text", msg],
+        ["kdialog", "--yesno", msg, "--title", t("updater.prompt_title")],
     ]:
         try:
             return subprocess.run(cmd, timeout=60).returncode == 0
@@ -106,7 +108,7 @@ def _prompt_linux(release: dict) -> bool:
 
     # Terminal fallback
     try:
-        answer = input(f"DeadlockRPC {tag} is available. Update now? [y/N] ").strip().lower()
+        answer = input(t("updater.prompt_terminal", tag=tag)).strip().lower()
         return answer in ("y", "yes")
     except (EOFError, KeyboardInterrupt):
         return False
@@ -117,7 +119,7 @@ def _prompt_linux(release: dict) -> bool:
 def _download_asset(asset: dict, dest_dir: Path, suffix: str = "") -> Path:
     """Download a release asset to dest_dir. Returns the downloaded file path."""
     url = asset["browser_download_url"]
-    logger.info("Downloading %s ...", asset["name"])
+    logger.info(t("updater.downloading", name=asset["name"]))
 
     resp = requests.get(url, timeout=120, stream=True)
     resp.raise_for_status()
@@ -148,7 +150,7 @@ def _update_binary_windows(release: dict) -> bool:
     """Download new release asset and create a batch script to swap + restart."""
     asset = _find_binary_asset(release)
     if not asset:
-        logger.warning("No Windows binary found in release assets.")
+        logger.warning(t("updater.no_windows_binary"))
         return False
 
     current_exe = Path(sys.executable)
@@ -165,7 +167,7 @@ def _update_binary_windows(release: dict) -> bool:
             os.unlink(tmp_path)
             tmp_path = extracted
 
-        logger.info("Download complete. Restarting...")
+        logger.info(t("updater.download_complete"))
 
         # Batch script waits for us to exit, replaces the exe, relaunches
         bat_path = current_exe.parent / "_update.bat"
@@ -185,7 +187,7 @@ def _update_binary_windows(release: dict) -> bool:
         return True
 
     except Exception as e:
-        logger.error("Update failed: %s", e)
+        logger.error(t("updater.update_failed", error=e))
         if tmp_path:
             try:
                 os.unlink(tmp_path)
@@ -219,7 +221,7 @@ def _update_binary_linux(release: dict) -> bool:
     """Download new binary and replace the current one."""
     asset = _find_binary_asset(release)
     if not asset:
-        logger.warning("No Linux binary found in release assets.")
+        logger.warning(t("updater.no_linux_binary"))
         return False
 
     current_exe = Path(sys.executable)
@@ -237,7 +239,7 @@ def _update_binary_linux(release: dict) -> bool:
 
         os.chmod(tmp_path, 0o755)
 
-        logger.info("Download complete. Restarting...")
+        logger.info(t("updater.download_complete"))
 
         # Shell script waits for us to exit, replaces the binary, relaunches
         sh_path = current_exe.parent / "_update.sh"
@@ -258,7 +260,7 @@ def _update_binary_linux(release: dict) -> bool:
         return True
 
     except Exception as e:
-        logger.error("Update failed: %s", e)
+        logger.error(t("updater.update_failed", error=e))
         if tmp_path:
             try:
                 os.unlink(tmp_path)
@@ -271,11 +273,11 @@ def _update_git() -> bool:
     """For users running from source: git pull and restart."""
     repo_dir = Path(__file__).parent.parent
     if not (repo_dir / ".git").exists():
-        logger.warning("Not a git repo and not a binary — can't auto-update.")
+        logger.warning(t("updater.not_git_repo"))
         return False
 
     try:
-        logger.info("Running git pull...")
+        logger.info(t("updater.git_pulling"))
         result = subprocess.run(
             ["git", "pull", "--ff-only"],
             cwd=repo_dir,
@@ -285,19 +287,19 @@ def _update_git() -> bool:
         )
 
         if result.returncode != 0:
-            logger.error("git pull failed: %s", result.stderr.strip())
+            logger.error(t("updater.git_pull_failed", error=result.stderr.strip()))
             return False
 
         if "Already up to date" in result.stdout:
-            logger.info("Already up to date.")
+            logger.info(t("updater.already_up_to_date"))
             return False
 
-        logger.info("Updated. Restarting...")
+        logger.info(t("updater.git_updated"))
         os.execv(sys.executable, [sys.executable] + sys.argv)
         return True
 
     except Exception as e:
-        logger.error("Update failed: %s", e)
+        logger.error(t("updater.update_failed", error=e))
         return False
 
 
@@ -305,22 +307,22 @@ def _update_git() -> bool:
 
 def check_and_prompt() -> None:
     """Check for update, prompt user, apply if accepted."""
-    logger.debug("Checking for updates...")
+    logger.debug(t("updater.checking"))
     release = check_for_update()
 
     if release is None:
-        logger.debug("No update available.")
+        logger.debug(t("updater.no_update"))
         return
 
     tag = release.get("tag_name", "?")
-    logger.info("New version available: %s (current: %s)", tag, CURRENT_VERSION)
+    logger.info(t("updater.new_version", tag=tag, current=CURRENT_VERSION))
 
     is_windows = platform.system() == "Windows"
 
     accepted = _prompt_windows(release) if is_windows else _prompt_linux(release)
 
     if not accepted:
-        logger.info("Update skipped.")
+        logger.info(t("updater.update_skipped"))
         return
 
     if _FROZEN:

@@ -6,14 +6,14 @@
     <img src="https://img.shields.io/badge/using-pypresence-00bb88?style=flat-square&logo=discord">
   </a>
   <img src="https://img.shields.io/badge/platform-Windows%20%26%20Linux-lightgrey?style=flat-square">
-  <img src="https://img.shields.io/github/downloads/Jelloge/Deadlock-Rich-Presence/total?style=flat-square">
+  <img src="https://img.shields.io/github/downloads/adomybeloved/DeadlockRPC/total?style=flat-square">
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square">
 </p>
 <p align="center">
-Discord Rich Presence for Valve's
-<a href="https://store.steampowered.com/app/1422450/Deadlock/">Deadlock</a>.
-Shows your live in-game status on your Discord profile
-(hero, game mode, match type, party size, match timer, etc). Supports all game modes!
+Discord Rich Presence для
+<a href="https://store.steampowered.com/app/1422450/Deadlock/">Deadlock</a> от Valve.
+Показывает ваш игровой статус в Discord-профиле в реальном времени —
+герой, режим игры, тип матча, размер группы, таймер матча и многое другое. Поддерживает все игровые режимы!
 </p>
 <p align="center">
   <img src="https://github.com/user-attachments/assets/bb411785-66f4-43ce-8c9e-d979f6ca7e96" height="135">
@@ -22,80 +22,105 @@ Shows your live in-game status on your Discord profile
   <img src="https://github.com/user-attachments/assets/112f40b9-d8d4-40f2-afa1-9f950a7ab438" height="135">
 </p>
 
-## Installation
+> [!NOTE]
+> Этот проект является форком [Deadlock-Rich-Presence](https://github.com/Jelloge/Deadlock-Rich-Presence) от **Jelloge**.
+> Оригинальный автор проделал всю основную работу — спасибо ему за это!
+> Данный форк добавляет полную систему локализации (русский/английский), русские имена героев со
+> склонениями, переработанный лейаут Discord-статуса и другие улучшения.
+
+## Установка
 
 ### Windows
-1. Download **DeadlockRPC-windows-x86_64.zip** from the [latest release](https://github.com/Jelloge/Deadlock-Rich-Presence/releases/latest)
-2. Extract and run **DeadlockRPC.exe**,  it will show up in your system tray
+1. Скачайте **DeadlockRPC-windows-x86_64.zip** из [последнего релиза](https://github.com/adomybeloved/DeadlockRPC/releases/latest)
+2. Распакуйте и запустите **DeadlockRPC.exe** — приложение появится в системном трее
 
 ### Linux
-1. Download **DeadlockRPC-linux-x86_64.zip** from the [latest release](https://github.com/Jelloge/Deadlock-Rich-Presence/releases/latest)
-2. Extract and run:
+1. Скачайте **DeadlockRPC-linux-x86_64.zip** из [последнего релиза](https://github.com/adomybeloved/DeadlockRPC/releases/latest)
+2. Распакуйте и запустите:
 ```bash
 unzip DeadlockRPC-linux-x86_64.zip
 cd DeadlockRPC
 chmod +x DeadlockRPC
 ./DeadlockRPC
 ```
-Make sure `-condebug` is in your Steam launch options for Deadlock (the app needs `console.log` to track game state).
+Убедитесь, что `-condebug` указан в параметрах запуска Deadlock в Steam (приложению нужен `console.log` для отслеживания состояния игры).
 
-### Notes
-- The app automatically checks for updates on startup and prompts you to update if a new release is available.
-- By default, the app launches Deadlock with `-condebug` automatically via Steam.
-- If you manage your own Steam launch options, set `"launch_game": false` in `config.json` and add `-condebug` to your launch options manually:
-<img width="480" height="119" alt="Steam launch options" src="https://github.com/user-attachments/assets/21aaf748-3f15-41de-9479-d48b3b8eba6d" />
+### Примечания
+- Приложение автоматически проверяет обновления при запуске и предлагает обновиться, если доступна новая версия.
+- По умолчанию приложение запускает Deadlock с `-condebug` автоматически через Steam.
+- Если вы управляете параметрами запуска Steam самостоятельно, установите `"launch_game": false` в `config.json` и добавьте `-condebug` вручную:
+<img width="480" height="119" alt="Параметры запуска Steam" src="https://github.com/user-attachments/assets/21aaf748-3f15-41de-9479-d48b3b8eba6d" />
+
+### Локализация
+
+Приложение поддерживает **русский** и **английский** языки. Для переключения измените поле `"language"` в `config.json`:
+
+```json
+{
+    "language": "ru"
+}
+```
+
+На русском языке:
+- Все режимы игры отображаются по-русски (Стандартный, Рейтинговый, и т.д.)
+- Имена героев — официальные русские названия от Valve (Инфернус, Пелена, Заточка...)
+- Правильные склонения: «Играет за **Виндикту**», «Играет за **Серого Когтя**»
+- Тексты убежища переведены (Мешает Коктейли в Убежище, Философствует в Убежище...)
+
 <details>
-<summary>Running from source</summary>
+<summary>Запуск из исходников</summary>
 
-If you prefer to run from source instead of using the pre-built binary:
+Если вы предпочитаете запускать из исходного кода:
 
 ```bash
-git clone https://github.com/Jelloge/Deadlock-Rich-Presence.git
-cd Deadlock-Rich-Presence
+git clone https://github.com/adomybeloved/DeadlockRPC.git
+cd DeadlockRPC
 pip install -r requirements.txt
 cd src
 python main.py
 ```
 
-Requires Python 3.10+. To build a standalone executable:
+Требуется Python 3.10+. Для сборки standalone-исполняемого файла:
 ```bash
 pip install pyinstaller
 python build.py
 ```
-Output: `dist/DeadlockRPC.exe` (Windows) or `dist/DeadlockRPC` (Linux)
+Результат: `dist/DeadlockRPC.exe` (Windows) или `dist/DeadlockRPC` (Linux)
 
 </details>
 
-## How It Works
+## Как это работает
 
-DeadlockRPC monitors Deadlock's `console.log` file (written when the game runs with `-condebug`). It parses log events using regex patterns that I painstakingly mapped out to detect game state changes and pushes updates to Discord.
+DeadlockRPC отслеживает файл `console.log` игры Deadlock (создаётся при запуске с `-condebug`). Приложение парсит события лога с помощью регулярных выражений, определяет изменения состояния игры и отправляет обновления в Discord.
 
-The game's runtime and memory are never touched. VAC-safe and won't affect performance.
+Память и рантайм игры **не затрагиваются**. Безопасно для VAC и не влияет на производительность.
 
-## Disclaimer
+## Дисклеймер
 
-Your antivirus MAY flag this application as malware. This is a known issue w/ executables bundled with PyInstaller, which packages Python applications into standalone .exe files. I get it if the detection concerns you. In that case, you can build the application from source!
+Ваш антивирус **может** пометить это приложение как вредоносное. Это известная проблема исполняемых файлов, собранных с PyInstaller, который упаковывает Python-приложения в standalone .exe файлы. Если вас беспокоит детект — вы можете собрать приложение из исходников!
 
-## Changelog
+## Изменения (этого форка)
 
-- **Auto-Update** The app checks GitHub for new releases on startup and prompts you to update
-- **Linux Support** Full Linux support via Proton. Game detection, Steam library paths, and system tray all work on Linux
-- **Dynamic Hero Data** Integrates with `deadlock-api.com`. Hero names are fetched automatically so new heroes work instantly without manual code updates
-- **Hideout Text** Your presence now displays hero-specific flavour text in the hideout (e.g., *"Mixing Drinks in the Hideout"* for Infernus)
-- **Fixed Hero Detection** Hero now correctly updates when entering a match. The hideout hero is cleared on match entry so the actual in-match hero is shown. Also fixed hero swapping in Sandbox
-- **Fixed Match Detection** Fixed standard and Street Brawl matches being misclassified as Bot Match due to placeholder bots loading before all players connect
-- **Party Tracking** Real party size tracking using GC party events. Party size now reflects actual members instead of being capped at 2
-- **Steam Path Detection** Added Windows Registry lookup so the app finds Deadlock regardless of where Steam is installed
+- **Локализация** — полная система локализации на YAML. Русский и английский языки, включая имена героев, режимы, интерфейс трея и все сообщения
+- **Русские имена героев** — официальные названия от Valve с правильными склонениями (винительный падеж)
+- **Переработанный лейаут RPC** — герой отображается на второй строке, большая картинка показывает имя героя, маленькая — название игры
+- **Кнопка GitHub** — в Discord-статусе отображается кнопка со ссылкой на репозиторий
 
-## Future Changes
+## Оригинальные фичи
 
-- Upload new unreleased hero assets to the Discord app (names work via API, but images still require manual Dev Portal uploads)
-- Localization
+- **Авто-обновление** — приложение проверяет GitHub на новые релизы при запуске
+- **Поддержка Linux** — полная поддержка через Proton
+- **Динамические данные героев** — интеграция с `deadlock-api.com`, новые герои подхватываются автоматически
+- **Текст убежища** — уникальный текст для каждого героя в убежище
+- **Отслеживание группы** — реальный размер группы через GC party events
+- **Определение пути Steam** — поиск Deadlock через реестр Windows
 
-## Known Bugs
+## Известные баги
 
-Please open an issue if you encounter any bugs.
+Пожалуйста, создайте issue если обнаружите какие-либо баги.
 
-## Support
+## Благодарности
 
-If you need help, message me on Discord : boba
+- **[Jelloge](https://github.com/Jelloge)** — автор оригинального проекта [Deadlock-Rich-Presence](https://github.com/Jelloge/Deadlock-Rich-Presence)
+- **[pypresence](https://github.com/qwertyquerty/pypresence)** — библиотека для Discord RPC
+- **[deadlock-api.com](https://deadlock-api.com)** — API для данных героев

@@ -2,9 +2,11 @@ from __future__ import annotations
 import logging
 from pypresence import Presence, exceptions as rpc_exceptions
 from game_state import GamePhase, GameState, MatchMode
+from locale import t
 logger = logging.getLogger(__name__)
 
 PARTY_MAX = 6
+GITHUB_URL = "https://github.com/adomybeloved/DeadlockRPC"
 
 class DiscordRPC:
 
@@ -24,12 +26,12 @@ class DiscordRPC:
                 self.rpc = Presence(self.application_id, pipe=pipe_id)
                 self.rpc.connect()
                 self._connected = True
-                logger.info("Connected to Discord RPC on pipe %d", pipe_id)
+                logger.info(t("rpc.connected_pipe", pipe=pipe_id))
                 return True
             except Exception as e:
-                logger.debug("Pipe %d unavailable: %s", pipe_id, e)
+                logger.debug(t("rpc.pipe_unavailable", pipe=pipe_id, error=e))
 
-        logger.error("Could not connect to Discord on any IPC pipe. Is Discord running?")
+        logger.error(t("rpc.no_pipe"))
         self._connected = False
         return False
 
@@ -64,10 +66,10 @@ class DiscordRPC:
                 self.rpc.update(**presence)
                 logger.debug("Presence: %s", presence)
         except rpc_exceptions.InvalidID:
-            logger.error("Invalid Discord Application ID")
+            logger.error(t("rpc.invalid_id"))
             self._connected = False
         except (ConnectionError, BrokenPipeError):
-            logger.warning("Discord connection lost")
+            logger.warning(t("rpc.connection_lost"))
             self._connected = False
         except Exception as e:
             logger.error("RPC error: %s", e)
@@ -80,77 +82,69 @@ class DiscordRPC:
         logo_text = self.assets.get("logo_text", "Deadlock")
 
         # Default layout:
-        # Large image is the hero (or logo if no hero)
+        # Large image = hero portrait (or logo if no hero selected)
+        # Large text  = localised hero name (tooltip on hover)
+        # Small image = game logo badge
+        # Small text  = game name
+        # Accusative form for "playing as [whom?]" — only differs in Russian
+        hero_acc = state.hero_display_name_accusative
+
+        hero = state.hero_display_name
         p: dict = {
             "large_image": state.hero_asset_name or logo,
-            "large_text": "Deadlock", # Keep main tooltip simple
+            "large_text": hero or logo_text,
         }
-        
-        # Add small image for the hero name to appear cleanly as a neat badge hover
-        if state.hero_display_name:
+
+        if hero:
             p["small_image"] = logo
-            p["small_text"] = state.hero_display_name
+            p["small_text"] = logo_text
+
         if state.in_party:
             p["party_size"] = [state.party_size, PARTY_MAX]
 
+        # Button linking to the project repository
+        p["buttons"] = [{"label": "GitHub", "url": GITHUB_URL}]
+
         match state.phase:
             case GamePhase.MAIN_MENU:
-                p["details"] = "Main Menu"
+                p["details"] = t("presence.main_menu")
                 p["large_image"] = logo
                 p["large_text"] = logo_text
-
-            case GamePhase.HIDEOUT:
-                # Use hero-specific hideout flavour text from the API when available
-                # e.g. "Mixing Drinks in the Hideout" for Infernus
-                p["details"] = state.hero_hideout_text
-                p["state"] = "Playing Solo (1 of 6)"
                 p.pop("small_image", None)
                 p.pop("small_text", None)
+
+            case GamePhase.HIDEOUT:
+                p["details"] = state.hero_hideout_text
+                p["state"] = t("presence.playing_solo")
 
             case GamePhase.PARTY_HIDEOUT:
                 p["details"] = state.hero_hideout_text
-                p["state"] = f"Party of {state.party_size}"
-                p.pop("small_image", None)
-                p.pop("small_text", None)
+                p["state"] = t("presence.party_of", size=state.party_size)
 
             case GamePhase.IN_QUEUE:
-                p["details"] = "Looking for Match..."
+                p["details"] = t("presence.looking_for_match")
                 if state.in_party:
-                    p["state"] = f"In Queue {state.party_size}"
-                # if state.hero_key:
-                #     p["small_text"] = "Searching"
+                    p["state"] = t("presence.in_queue", size=state.party_size)
 
             case GamePhase.MATCH_INTRO:
                 mode_str = state.mode_display()
-                hero = state.hero_display_name
-                if state.in_party:
-                    p["details"] = f" {mode_str} · {hero}" if hero else f" {mode_str}"
-                    p["state"] = f"Party of {state.party_size}"
-                elif hero:
-                    p["details"] = f" {mode_str}"
-                    p["state"] = f"Playing as {hero}"
-                else:
-                    p["details"] = f" {mode_str}"
+                p["details"] = f" {mode_str}"
+                if hero_acc:
+                    p["state"] = t("presence.playing_as", hero=hero_acc)
 
             case GamePhase.IN_MATCH:
                 mode_str = state.mode_display()
-                hero = state.hero_display_name
-                if state.in_party:
-                    p["details"] = f" {mode_str} · {hero}" if hero else f" {mode_str}"
-                    p["state"] = f"Party of {state.party_size}"
-                elif hero:
-                    p["details"] = f" {mode_str}"
-                    p["state"] = f"Playing as {hero}"
-                else:
-                    p["details"] = f" {mode_str}"
+                p["details"] = f" {mode_str}"
+                if hero_acc:
+                    p["state"] = t("presence.playing_as", hero=hero_acc)
                 if state.match_start_time and state.match_mode not in (MatchMode.SANDBOX, MatchMode.TUTORIAL):
                     p["start"] = int(state.match_start_time)
 
             case GamePhase.POST_MATCH:
-                p["details"] = "Post-Match"
+                p["details"] = t("presence.post_match")
 
             case GamePhase.SPECTATING:
-                p["details"] = "Spectating a Match"
+                p["details"] = t("presence.spectating")
                 p["large_image"] = logo
                 p["large_text"] = logo_text
                 p.pop("small_image", None)

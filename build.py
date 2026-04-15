@@ -15,6 +15,7 @@ def main():
         "--name", output_name,
         f"--add-data=src/config.json{sep}.",
         f"--add-data=src/favicon.ico{sep}.",
+        f"--add-data=src/locales{sep}locales",
         "src/main.py",
     ]
 

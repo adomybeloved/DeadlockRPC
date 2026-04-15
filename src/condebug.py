@@ -1,4 +1,5 @@
-"""Launch Deadlock with -condebug via Steam.
+"""
+Launch Deadlock with -condebug via Steam.
 """
 
 import os

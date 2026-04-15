@@ -1,6 +1,8 @@
 {
     "discord_application_id": "1474302474474094634",
 
+    "language": "ru",
+
     "deadlock_install_path": "",
 
     "console_log_relative_path": "game/citadel/console.log",

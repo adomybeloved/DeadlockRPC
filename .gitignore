@@ -1,32 +1,39 @@
-#python
+# ── Python ─────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
-dist/
-build/
-*.spec.bak
+*.egg
 
-#VE
+# ── Virtual environments ──────────────────────────────────────────────────
 venv/
 .venv/
 env/
+ENV/
 
-#PyInstaller
-*.manifest
+# ── PyInstaller ───────────────────────────────────────────────────────────
+dist/
+build/
+*.spec
 *.spec.bak
+*.manifest
 
-#IDE
+# ── IDE / editors ─────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.classpath
 
-#OS
+# ── OS ────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
+ehthumbs.db
 
-#App runtime
+# ── App runtime ───────────────────────────────────────────────────────────
 .deadlock-rpc/
 *.log
 *.lock

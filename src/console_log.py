@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Callable
 
 from game_state import GamePhase, GameState, MatchMode
+from locale import t
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +169,7 @@ class LogWatcher:
             game_running = self.is_game_running()
 
             if game_running and not self._game_was_running:
-                logger.info("Deadlock detected!")
+                logger.info(t("watcher.deadlock_detected"))
                 self._game_was_running = True
                 self.state.session_start_time = time.time()
                 self.state.enter_main_menu()
@@ -178,13 +179,11 @@ class LogWatcher:
                 self.resync()
                 if not self._open_log():
                     logger.warning(
-                        "console.log not found at %s - is Deadlock running with -condebug? "
-                        "Add -condebug to Steam launch options or restart Deadlock via this app.",
-                        self.log_path,
+                        t("watcher.console_log_not_found", path=self.log_path)
                     )
 
             elif not game_running and self._game_was_running:
-                logger.info("Deadlock closed.")
+                logger.info(t("watcher.deadlock_closed"))
                 self._game_was_running = False
                 self._clear_party_tracking()
                 self._open_hero_window()

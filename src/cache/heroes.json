@@ -298,5 +298,10 @@
     "name": "Opera",
     "hideout_text": "In the Hideout",
     "asset_key": "hero_opera"
+  },
+  "testhero": {
+    "name": "hero_testhero",
+    "hideout_text": "Playing With Ava in the Hideout",
+    "asset_key": "hero_testhero"
   }
 }
