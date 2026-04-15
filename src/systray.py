@@ -6,7 +6,7 @@ import threading
 import time
 from pathlib import Path
 
-from locale import t
+from localize import t
 
 logger = logging.getLogger("deadlock-rpc")
 

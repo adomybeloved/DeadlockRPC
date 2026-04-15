@@ -17,7 +17,7 @@ from presence import DiscordRPC
 from systray import create_tray_icon
 from hero_data import HeroDataStore
 from updater import check_and_prompt as check_for_updates
-from locale import t
+from localize import t
 
 _FROZEN = getattr(sys, "_MEIPASS", None)
 BUNDLE_DIR = Path(_FROZEN) if _FROZEN else Path(__file__).parent

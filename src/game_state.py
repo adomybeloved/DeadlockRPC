@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
-from locale import t
+from localize import t
 
 if TYPE_CHECKING:
     from hero_data import HeroDataStore

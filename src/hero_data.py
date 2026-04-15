@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from typing import TypedDict
 
-from locale import t
+from localize import t
 
 logger = logging.getLogger(__name__)
 

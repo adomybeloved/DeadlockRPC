@@ -14,7 +14,7 @@ from pathlib import Path
 
 import requests
 
-from locale import t
+from localize import t
 
 logger = logging.getLogger(__name__)
 

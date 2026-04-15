@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 from pypresence import Presence, exceptions as rpc_exceptions
 from game_state import GamePhase, GameState, MatchMode
-from locale import t
+from localize import t
 logger = logging.getLogger(__name__)
 
 PARTY_MAX = 6

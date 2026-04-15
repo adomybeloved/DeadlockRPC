@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Callable
 
 from game_state import GamePhase, GameState, MatchMode
-from locale import t
+from localize import t
 
 logger = logging.getLogger(__name__)
 
